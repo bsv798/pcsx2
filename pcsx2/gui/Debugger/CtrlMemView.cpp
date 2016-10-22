@@ -536,6 +536,10 @@ void CtrlMemView::keydownEvent(wxKeyEvent& evt)
 			history.pop();
 		}
 		break;
+	case WXK_TAB:
+		asciiSelected = !asciiSelected;
+		redraw();
+		break;
 	default:
 		evt.Skip();
 		break;
