@@ -24,6 +24,7 @@
 BEGIN_EVENT_TABLE(CtrlRegisterList, wxWindow)
 	EVT_SIZE(CtrlRegisterList::sizeEvent)
 	EVT_LEFT_DOWN(CtrlRegisterList::mouseEvent)
+	EVT_LEFT_DCLICK(CtrlRegisterList::mouseEvent)
 	EVT_RIGHT_DOWN(CtrlRegisterList::mouseEvent)
 	EVT_RIGHT_UP(CtrlRegisterList::mouseEvent)
 	EVT_MOTION(CtrlRegisterList::mouseEvent)
@@ -590,6 +591,14 @@ void CtrlRegisterList::mouseEvent(wxMouseEvent& evt)
 
 		SetFocus();
 		SetFocusFromKbd();
+	}
+
+	if (evt.ButtonDClick(wxMOUSE_BTN_LEFT)) {
+		if (cpu->getRegisterSize(category) == 32)
+			changeValue(CHANGE32);
+		else
+			changeValue(LOWER64);
+		Refresh();
 	}
 }
 
