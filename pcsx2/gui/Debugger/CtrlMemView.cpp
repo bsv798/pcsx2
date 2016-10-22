@@ -23,6 +23,7 @@
 #include "DisassemblyDialog.h"
 #include <wchar.h>
 #include <wx/clipbrd.h>
+#include <wx/ffile.h>
 
 
 BEGIN_EVENT_TABLE(CtrlMemView, wxWindow)
@@ -58,6 +59,7 @@ enum MemoryViewMenuIdentifiers
 	ID_MEMVIEW_COPYVALUE_64,
 	ID_MEMVIEW_COPYVALUE_128,
 	ID_MEMVIEW_DUMP,
+	ID_MEMVIEW_LOAD,
 };
 
 CtrlMemView::CtrlMemView(wxWindow* parent, DebugInterface* _cpu)
@@ -101,8 +103,9 @@ CtrlMemView::CtrlMemView(wxWindow* parent, DebugInterface* _cpu)
 	menu.Append(ID_MEMVIEW_COPYVALUE_32,		L"Copy Value (32 bit)");
 	menu.Append(ID_MEMVIEW_COPYVALUE_64,		L"Copy Value (64 bit)");
 	menu.Append(ID_MEMVIEW_COPYVALUE_128,		L"Copy Value (128 bit)");
-	menu.Append(ID_MEMVIEW_DUMP,				L"Dump...");
-	menu.Enable(ID_MEMVIEW_DUMP,false);
+	menu.AppendSeparator();
+	menu.Append(ID_MEMVIEW_DUMP,				L"Dump");
+	menu.Append(ID_MEMVIEW_LOAD,				L"Load");
 	menu.Bind(wxEVT_MENU, &CtrlMemView::onPopupClick, this);
 
 	SetScrollbar(wxVERTICAL,100,1,201,true);
@@ -388,7 +391,34 @@ void CtrlMemView::onPopupClick(wxCommandEvent& evt)
 			wxTheClipboard->Close();
 		}
 		break;
+	case ID_MEMVIEW_DUMP:
+		memoryDump();
+		break;
+	case ID_MEMVIEW_LOAD:
+		memoryLoad();
+		break;
 	}
+}
+
+void CtrlMemView::memoryDump()
+{
+	wxFFile memory_file(mainMemFileName, "wb");
+	memory_file.Write(eeMem->Main, Ps2MemSize::MainRam);
+
+	wxFFile scratch_file(scratchFileName, "wb");
+	scratch_file.Write(eeMem->Scratch, Ps2MemSize::Scratch);
+}
+
+void CtrlMemView::memoryLoad()
+{
+	wxFFile memory_file(mainMemFileName, "rb");
+	HostSys::MemProtect(eeMem->Main, Ps2MemSize::MainRam, PageAccess_ReadWrite());
+	memory_file.Read(eeMem->Main, Ps2MemSize::MainRam);
+
+	wxFFile scratch_file(scratchFileName, "rb");
+	scratch_file.Read(eeMem->Scratch, Ps2MemSize::Scratch);
+	
+	redraw();
 }
 
 void CtrlMemView::mouseEvent(wxMouseEvent& evt)

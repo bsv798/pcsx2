@@ -45,6 +45,11 @@ private:
 	void scrollCursor(int bytes);
 	void onPopupClick(wxCommandEvent& evt);
 	void focusEvent(wxFocusEvent& evt) { Refresh(); };
+	void memoryDump();
+	void memoryLoad();
+
+	const wxString mainMemFileName = "mem_main.bin";
+	const wxString scratchFileName = "mem_scratch.bin";
 
 	DebugInterface* cpu;
 	int rowHeight;
