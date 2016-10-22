@@ -15,6 +15,7 @@
 
 #include "PrecompiledHeader.h"
 
+#include "AppSaveStates.h"
 #include "DisassemblyDialog.h"
 #include "DebugTools/DebugInterface.h"
 #include "DebugTools/DisassemblyManager.h"
@@ -26,6 +27,29 @@
 #ifdef _WIN32
 #include <Windows.h>
 #endif
+
+class SysExecEvent_UpdateDebuggerGui : public SysExecEvent
+{
+protected:
+	CpuTabPage* m_cpuTabPage;
+
+public:
+	wxString GetEventName() const { return L"VM_UpdateDebuggerGui"; }
+
+	virtual ~SysExecEvent_UpdateDebuggerGui() throw() {}
+	SysExecEvent_UpdateDebuggerGui* Clone() const { return new SysExecEvent_UpdateDebuggerGui( *this ); }
+	SysExecEvent_UpdateDebuggerGui(CpuTabPage* cpuTabPage)
+	{
+		m_cpuTabPage = cpuTabPage;
+	}
+
+protected:
+	void InvokeEvent()
+	{
+		if (m_cpuTabPage != NULL)
+			m_cpuTabPage->update();
+	}
+};
 
 BEGIN_EVENT_TABLE(DisassemblyDialog, wxFrame)
    EVT_COMMAND( wxID_ANY, debEVT_SETSTATUSBARTEXT, DisassemblyDialog::onDebuggerEvent )
@@ -250,7 +274,19 @@ DisassemblyDialog::DisassemblyDialog(wxWindow* parent):
 	
 	breakpointButton = new wxButton( panel, wxID_ANY, L"Breakpoint" );
 	Bind(wxEVT_BUTTON, &DisassemblyDialog::onBreakpointClick, this, breakpointButton->GetId());
-	topRowSizer->Add(breakpointButton);
+	topRowSizer->Add(breakpointButton, 0, wxRIGHT, 8);
+
+	loadStateButton = new wxButton(panel, wxID_ANY, L"Load state");
+	Bind(wxEVT_BUTTON, &DisassemblyDialog::onLoadStateClicked, this, loadStateButton->GetId());
+	topRowSizer->Add(loadStateButton);
+
+	changeStateButton = new wxButton(panel, wxID_ANY, L"Change state");
+	Bind(wxEVT_BUTTON, &DisassemblyDialog::onChangeStateClicked, this, changeStateButton->GetId());
+	topRowSizer->Add(changeStateButton);
+
+	saveStateButton = new wxButton(panel, wxID_ANY, L"Save state");
+	Bind(wxEVT_BUTTON, &DisassemblyDialog::onSaveStateClicked, this, saveStateButton->GetId());
+	topRowSizer->Add(saveStateButton);
 
 	topSizer->Add(topRowSizer,0,wxLEFT|wxRIGHT|wxTOP,3);
 
@@ -345,6 +381,21 @@ void DisassemblyDialog::onStepIntoClicked(wxCommandEvent& evt)
 void DisassemblyDialog::onStepOutClicked(wxCommandEvent& evt)
 {
 	stepOut();
+}
+
+void DisassemblyDialog::onLoadStateClicked(wxCommandEvent& evt)
+{
+	loadState();
+}
+
+void DisassemblyDialog::onChangeStateClicked(wxCommandEvent& evt)
+{
+	changeState();
+}
+
+void DisassemblyDialog::onSaveStateClicked(wxCommandEvent& evt)
+{
+	saveState();
 }
 
 void DisassemblyDialog::onPageChanging(wxCommandEvent& evt)
@@ -467,6 +518,25 @@ void DisassemblyDialog::stepOut()
 
 	CBreakPoints::AddBreakPoint(addr,true);
 	r5900Debug.resumeCpu();
+}
+
+void DisassemblyDialog::loadState()
+{
+	if (r5900Debug.isCpuPaused())
+		States_DefrostCurrentSlotPause();
+	else
+		States_DefrostCurrentSlot();
+	GetSysExecutorThread().PostEvent(new SysExecEvent_UpdateDebuggerGui(currentCpu));
+}
+
+void DisassemblyDialog::changeState()
+{
+	States_CycleSlotForward();
+}
+
+void DisassemblyDialog::saveState()
+{
+	States_FreezeCurrentSlot();
 }
 
 void DisassemblyDialog::onBreakpointClick(wxCommandEvent& evt)

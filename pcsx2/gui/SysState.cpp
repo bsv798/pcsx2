@@ -492,14 +492,15 @@ class SysExecEvent_UnzipFromDisk : public SysExecEvent
 {
 protected:
 	wxString	m_filename;
+	bool		m_resume;
 
 public:
 	wxString GetEventName() const { return L"VM_UnzipFromDisk"; }
 
 	virtual ~SysExecEvent_UnzipFromDisk() throw() {}
 	SysExecEvent_UnzipFromDisk* Clone() const { return new SysExecEvent_UnzipFromDisk( *this ); }
-	SysExecEvent_UnzipFromDisk( const wxString& filename )
-		: m_filename( filename )
+	SysExecEvent_UnzipFromDisk( const wxString& filename, const bool resume )
+		: m_filename( filename ), m_resume( resume )
 	{
 	}
 
@@ -629,7 +630,11 @@ protected:
 		reader->Read( buffer.GetPtr(), foundInternal->GetSize() );
 
 		memLoadingState( buffer ).FreezeBios().FreezeInternals();
-		GetCoreThread().Resume();	// force resume regardless of emulation state earlier.
+
+		if (m_resume)
+			GetCoreThread().Resume();	// force resume regardless of emulation state earlier.
+		else
+			GetCoreThread().Pause();
 	}
 };
 
@@ -649,10 +654,10 @@ void StateCopy_SaveToFile( const wxString& file )
 	ziplist.release();
 }
 
-void StateCopy_LoadFromFile( const wxString& file )
+void StateCopy_LoadFromFile( const wxString& file, const bool resume )
 {
 	UI_DisableSysActions();
-	GetSysExecutorThread().PostEvent(new SysExecEvent_UnzipFromDisk( file ));
+	GetSysExecutorThread().PostEvent(new SysExecEvent_UnzipFromDisk( file, resume ));
 }
 
 // Saves recovery state info to the given saveslot, or saves the active emulation state
@@ -678,7 +683,7 @@ void StateCopy_SaveToSlot( uint num )
 	StateCopy_SaveToFile( file );
 }
 
-void StateCopy_LoadFromSlot( uint slot, bool isFromBackup )
+void StateCopy_LoadFromSlot( uint slot, bool isFromBackup, bool resume )
 {
 	wxString file( SaveStateBase::GetFilename( slot ) + wxString( isFromBackup?L".backup":L"" ) );
 
@@ -691,5 +696,5 @@ void StateCopy_LoadFromSlot( uint slot, bool isFromBackup )
 	Console.WriteLn( Color_StrongGreen, L"Loading savestate from slot %d...%s", slot, WX_STR(wxString( isFromBackup?L" (backup)":L"" )) );
 	Console.Indent().WriteLn( Color_StrongGreen, L"filename: %s", WX_STR(file) );
 
-	StateCopy_LoadFromFile( file );
+	StateCopy_LoadFromFile( file, resume );
 }

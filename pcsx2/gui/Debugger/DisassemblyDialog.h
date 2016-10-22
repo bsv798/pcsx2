@@ -99,6 +99,9 @@ protected:
 	void onStepOverClicked(wxCommandEvent& evt);
 	void onStepIntoClicked(wxCommandEvent& evt);
 	void onStepOutClicked(wxCommandEvent& evt);
+	void onLoadStateClicked(wxCommandEvent& evt);
+	void onChangeStateClicked(wxCommandEvent& evt);
+	void onSaveStateClicked(wxCommandEvent& evt);
 	void onDebuggerEvent(wxCommandEvent& evt);
 	void onPageChanging(wxCommandEvent& evt);
 	void onBreakpointClick(wxCommandEvent& evt);
@@ -107,6 +110,9 @@ protected:
 	void stepOver();
 	void stepInto();
 	void stepOut();
+	void loadState();
+	void changeState();
+	void saveState();
 	void gotoPc();
 private:
 	CpuTabPage* eeTab;
@@ -120,4 +126,7 @@ private:
 	wxButton* stepOverButton;
 	wxButton* stepOutButton;
 	wxButton* breakpointButton;
+	wxButton* loadStateButton;
+	wxButton* changeStateButton;
+	wxButton* saveStateButton;
 };

@@ -490,6 +490,20 @@ static const GlobalCommandDescriptor CommandDeclarations[] =
 		false,
 	},
 
+	{	"States_DefrostCurrentSlotPause",
+		States_DefrostCurrentSlotPause,
+		pxL("Load state"),
+		pxL("Loads a virtual machine state from the current slot without resuming emulation."),
+		false,
+	},
+
+	{	"States_DefrostCurrentSlotBackupPause",
+		States_DefrostCurrentSlotBackupPause,
+		pxL("Load State Backup"),
+		pxL("Loads virtual machine state backup for current slot without resuming emulation."),
+		false,
+	},
+
 	{	"States_CycleSlotForward",
 		States_CycleSlotForward,
 		pxL( "Cycle to next slot" ),

@@ -86,7 +86,7 @@ void States_FreezeCurrentSlot()
 	GetSysExecutorThread().PostIdleEvent( SysExecEvent_ClearSavingLoadingFlag() );
 }
 
-void _States_DefrostCurrentSlot( bool isFromBackup )
+void _States_DefrostCurrentSlot( bool isFromBackup, bool resume )
 {
 	if( !SysHasValidState() )
 	{
@@ -101,7 +101,7 @@ void _States_DefrostCurrentSlot( bool isFromBackup )
 	}
 
 	GSchangeSaveState( StatesC, SaveStateBase::GetFilename( StatesC ).ToUTF8() );
-	StateCopy_LoadFromSlot( StatesC, isFromBackup );
+	StateCopy_LoadFromSlot( StatesC, isFromBackup, resume);
 
 	GetSysExecutorThread().PostIdleEvent( SysExecEvent_ClearSavingLoadingFlag() );
 
@@ -110,14 +110,23 @@ void _States_DefrostCurrentSlot( bool isFromBackup )
 
 void States_DefrostCurrentSlot()
 {
-	_States_DefrostCurrentSlot( false );
+	_States_DefrostCurrentSlot( false, true );
 }
 
 void States_DefrostCurrentSlotBackup()
 {
-	_States_DefrostCurrentSlot( true );
+	_States_DefrostCurrentSlot( true, true );
 }
 
+void States_DefrostCurrentSlotPause()
+{
+	_States_DefrostCurrentSlot(false, false);
+}
+
+void States_DefrostCurrentSlotBackupPause()
+{
+	_States_DefrostCurrentSlot(true, false);
+}
 
 void States_registerLoadBackupMenuItem( wxMenuItem* loadBackupMenuItem )
 {
